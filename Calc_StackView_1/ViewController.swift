@@ -33,6 +33,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var btnReset: UIButton!
     
     var stack = Stack<String>()
+    var valueStack = Stack<Int>()
+    var operatorStack = Stack<String>()
+    var operationButtonOn: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -74,42 +77,16 @@ class ViewController: UIViewController {
         if value == "0"{
             value = ""
         }
-        switch sender.tag {
-        case 0:
-            value?.append(contentsOf: "0")
-            break
-        case 1:
-            value?.append(contentsOf: "1")
-            break
-        case 2:
-            value?.append(contentsOf: "2")
-            break
-        case 3:
-            value?.append(contentsOf: "3")
-            break
-        case 4:
-            value?.append(contentsOf: "4")
-            break
-        case 5:
-            value?.append(contentsOf: "5")
-            break
-        case 6:
-            value?.append(contentsOf: "6")
-            break
-        case 7:
-            value?.append(contentsOf: "7")
-            break
-        case 8:
-            value?.append(contentsOf: "8")
-            break
-        case 9:
-            value?.append(contentsOf: "9")
-            break
-        default:
-            break
+        if operationButtonOn{
+            value = ""
+            value?.append(contentsOf: String(sender.tag))
+            operationButtonOn = false
+        }else{
+            value?.append(contentsOf: String(sender.tag))
         }
         resultLabel.text = value
     }
+    
     @IBAction func operatorAction(_ sender: UIButton){
         let value = resultLabel.text ?? ""
         stack.push(element: value)
@@ -124,23 +101,26 @@ class ViewController: UIViewController {
         case 50:
             // /
             stack.push(element: "/")
+            changeButtonColor(sender)
             break
         case 60:
             // *
             stack.push(element: "*")
+            changeButtonColor(sender)
             break
         case 70:
             // -
             stack.push(element: "-")
+            changeButtonColor(sender)
             break
         case 80:
             // +
             stack.push(element: "+")
+            changeButtonColor(sender)
             break
         case 90:
             // =
-            
-            // TODO calculate
+            operationButtonOn = false
             calculate()
             break
         default:
@@ -148,7 +128,64 @@ class ViewController: UIViewController {
         }
     }
     func calculate(){
+//        print(stack)
+        // TODO: calculate stack value
+        var prefix = [String]()
+        var postfix = [String]()
+        for _ in 0..<stack.count{
+            prefix.append(stack.removeFirst() ?? "")
+        }
         
+        // 중위표기배열 -> 후위표기배열 변환
+        for idx in 0..<prefix.count{
+            let postfixValue = prefix[idx]
+            if postfixValue == "+" ||
+                postfixValue == "-" ||
+                postfixValue == "*" ||
+                postfixValue == "/"{
+                operatorStack.push(element: postfixValue)
+            }else{
+                postfix.append(postfixValue)
+            }
+        }
+        for _ in 0..<operatorStack.count{
+            if !operatorStack.isEmpty {
+                postfix.append(operatorStack.pop() ?? "")
+            }
+        }
+        // 후위표기법 계산
+        for idx in 0..<postfix.count{
+            let operatorValue = postfix[idx]
+            if operatorValue == "+"{
+                guard let number1 = valueStack.pop() else { return }
+                guard let number2 = valueStack.pop() else { return }
+                let result = number1+number2
+                valueStack.push(element: result)
+            }else if operatorValue == "-" {
+                guard let number1 = valueStack.pop() else { return }
+                guard let number2 = valueStack.pop() else { return }
+                let result = number1-number2
+                valueStack.push(element: result)
+            }else if operatorValue == "*"{
+                guard let number1 = valueStack.pop() else { return }
+                guard let number2 = valueStack.pop() else { return }
+                let result = number1*number2
+                valueStack.push(element: result)
+            }else if operatorValue == "/"{
+                guard let number1 = valueStack.pop() else { return }
+                guard let number2 = valueStack.pop() else { return }
+                let result = number1/number2
+                valueStack.push(element: result)
+            }else{
+                valueStack.push(element: Int(operatorValue)!)
+            }
+        }
+        resultLabel.text = String(valueStack.pop()!)
+    }
+    func changeButtonColor(_ sender: UIButton){
+        operationButtonOn = true
+//        sender.backgroundColor? = UIColor.white
+//        sender.setTitleColor(UIColor.orange, for: .normal)
     }
     @IBAction func resetAction(_ sender: UIButton){
         resultLabel.text = "0"

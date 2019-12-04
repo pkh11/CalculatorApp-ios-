@@ -31,4 +31,13 @@ public struct Stack<T> {
     public mutating func removeAll(){
         self.elements.removeAll()
     }
+    public mutating func removeFirst() -> T?{
+        guard self.elements.count > 0 else {
+            return nil
+        }
+        return self.elements.remove(at: 0)
+    }
+    public mutating func first() -> T?{
+        return self.elements.first
+    }
 }
